@@ -1,24 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>propspace</title>
-    <base href="/" />
-    <link rel="icon" href="favicon.ico" />
-    <link type="text/css" rel="stylesheet" href="main.css" />
-  </head>
-  <body>
-    <main>
-      <img src="logo2.svg" alt="DFINITY logo" />
-      <br />
-      <br />
-      <form action="#">
-        <label for="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" />
-        <button type="submit">Click Me!</button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propspace - Housing Units on ICP Blockchain</title>
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      padding: 1rem 0;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* Search Section */
+    .search-section {
+      background-color: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    /* Properties Section */
+    .properties-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .property-card {
+      background-color: #fff;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    .property-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .property-card p {
+      margin-bottom: 0.5rem;
+    }
+
+    .buy-button {
+      padding: 0.5rem 1rem;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .buy-button:hover {
+      background-color: #555;
+    }
+
+    /* Add Property Section */
+    .add-property-section {
+      background-color: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .add-property-form input[type="text"],
+    .add-property-form input[type="number"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .add-property-form button {
+      padding: 0.5rem 1rem;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .add-property-form button:hover {
+      background-color: #555;
+    }
+
+    /* Owned Units Section */
+    .owned-units-section {
+      background-color: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .owned-unit {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Transaction History Section */
+    .transaction-history-section {
+      background-color: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    .transaction {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Propspace</h1>
+    <p>Housing Units on ICP Blockchain</p>
+  </header>
+
+  <div class="container">
+    <section class="search-section">
+      <h2>Search for a House</h2>
+      <input type="text" class="search-input" placeholder="Enter Location">
+      <button class="buy-button">Search</button>
+    </section>
+
+    <section class="properties-section">
+      <div class="property-card">
+        <h3>Property Name</h3>
+        <p>Description of the property</p>
+        <p>Units Available: 10</p>
+        <p>Price per Unit: 0.1 ICP</p>
+        <button class="buy-button">Buy Unit</button>
+      </div>
+      <div class="property-card">
+        <h3>Property Name</h3>
+        <p>Description of the property</p>
+        <p>Units Available: 8</p>
+        <p>Price per Unit: 0.15 ICP</p>
+        <button class="buy-button">Buy Unit</button>
+      </div>
+      <!-- More property cards can be added -->
+    </section>
+
+    <section class="add-property-section">
+      <h2>Add New Property</h2>
+      <form class="add-property-form">
+        <input type="text" placeholder="Property Name">
+        <input type="text" placeholder="Description">
+        <input type="number" placeholder="Units Available">
+        <input type="number" step="0.01" placeholder="Price per Unit">
+        <button type="submit">Add Property</button>
       </form>
-      <section id="greeting"></section>
-    </main>
-  </body>
-</html>
+    </section>
+
+    <section class="owned-units-section">
+      <h2>Owned Housing Units</h2>
+      <div class="owned-unit">
+        <h3>Property Name</h3>
+        <p>Units Owned: 5</p>
+      </div>
+      <!-- More owned unit sections can be added -->
+    </section>
+
+    <section class="transaction-history-section">
+      <h2>Transaction History</h2>
+      <div class="transaction">
+        <p>Transaction Type: Bought</p>
+        <p>Property: Property Name</p>
+        <p>Units: 3</p>
+        <p>Date: 2023-12-21</p>
+      </div>
+      <!-- More transaction history sections can be added -->
+    </section>
+  </div>
+</body>
+</
+
+html>

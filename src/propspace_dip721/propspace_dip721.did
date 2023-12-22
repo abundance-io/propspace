@@ -1,0 +1,118 @@
+type CanisterMetaData = record {
+  logo : opt text;
+  name : opt text;
+  created_at : nat64;
+  upgraded_at : nat64;
+  custodians : vec principal;
+  symbol : opt text;
+};
+type DataType = variant { Raw; Link };
+type GenericValue = variant {
+  Nat64Content : nat64;
+  Nat32Content : nat32;
+  BoolContent : bool;
+  Nat8Content : nat8;
+  Int64Content : int64;
+  IntContent : int;
+  NatContent : nat;
+  Nat16Content : nat16;
+  Int32Content : int32;
+  Int8Content : int8;
+  FloatContent : float64;
+  Int16Content : int16;
+  BlobContent : vec nat8;
+  NestedContent : Vec;
+  Principal : principal;
+  TextContent : text;
+};
+type InitArguments = record {
+  custoidians : opt vec principal;
+  logo : opt text;
+  name : opt text;
+  symbol : opt text;
+};
+type NftError = variant {
+  UnauthorizedOperator;
+  SelfTransfer;
+  TokenNotFound;
+  UnauthorizedOwner;
+  TxNotFound;
+  SelfApprove;
+  OperatorNotFound;
+  ExistedNFT;
+  OwnerNotFound;
+  Other : text;
+};
+type Result = variant { Ok : nat; Err : NftError };
+type Result_1 = variant { Ok; Err : NftError };
+type Result_2 = variant { Ok : TokenData; Err : NftError };
+type Result_3 = variant { Ok : TokenMetaData; Err : NftError };
+type Result_4 = variant { Ok : nat64; Err : NftError };
+type Result_5 = variant { Ok : principal; Err : NftError };
+type Result_6 = variant { Ok : vec nat64; Err : NftError };
+type Result_7 = variant { Ok : vec TokenMetaData; Err : NftError };
+type Stats = record {
+  cycles : nat64;
+  total_transactions : nat64;
+  total_unique_holders : nat64;
+  total_supply : nat64;
+};
+type TokenData = record { data_type : DataType; bytes : vec nat8 };
+type TokenMetaData = record {
+  owner : principal;
+  properties : vec record { text; GenericValue };
+  is_burned : bool;
+  burned_at : opt nat64;
+  burned_by : opt principal;
+  minted_at : nat64;
+  minted_by : principal;
+};
+type Vec = vec record {
+  text;
+  variant {
+    Nat64Content : nat64;
+    Nat32Content : nat32;
+    BoolContent : bool;
+    Nat8Content : nat8;
+    Int64Content : int64;
+    IntContent : int;
+    NatContent : nat;
+    Nat16Content : nat16;
+    Int32Content : int32;
+    Int8Content : int8;
+    FloatContent : float64;
+    Int16Content : int16;
+    BlobContent : vec nat8;
+    NestedContent : Vec;
+    Principal : principal;
+    TextContent : text;
+  };
+};
+service : (opt InitArguments) -> {
+  balanceOf : (principal) -> (Result) query;
+  burnToken : (nat64) -> (Result_1);
+  getCanisterCustodians : () -> (vec principal) query;
+  getCanisterCycles : () -> (nat) query;
+  getCanisterLogo : () -> (opt text) query;
+  getCanisterMetadata : () -> (CanisterMetaData) query;
+  getCanisterName : () -> (opt text) query;
+  getCanisterStats : () -> (Stats) query;
+  getCanisterSymbol : () -> (opt text) query;
+  getTokenData : (nat64) -> (Result_2) query;
+  getTokenMetadata : (nat64) -> (Result_3) query;
+  mint : (
+      principal,
+      opt nat64,
+      TokenData,
+      opt vec record { text; GenericValue },
+    ) -> (Result_4);
+  ownerOf : (nat64) -> (Result_5) query;
+  ownerTokenIdentifiers : (principal) -> (Result_6) query;
+  ownerTokenMetadata : (principal) -> (Result_7) query;
+  setCanisterCustodians : (vec principal) -> ();
+  setCanisterLogo : (opt text) -> ();
+  setCanisterName : (opt text) -> ();
+  setCanisterSymbol : (opt text) -> ();
+  totalSupply : () -> (nat) query;
+  totalUniqueHolders : () -> (nat) query;
+}
