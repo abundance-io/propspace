@@ -1,61 +1,102 @@
-# propspace
+# Propspace
 
-Welcome to your new propspace project and to the internet computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+Propspace is a decentralized application (DApp) built on the Internet Computer Protocol (ICP) that facilitates the selling and co-ownership of housing units as NFTs (Non-Fungible Tokens). Users can purchase units of a property, co-own it, and earn profits based on its performance.
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+## Overview
 
-To learn more before you start working with propspace, see the following documentation available online:
+Propspace leverages a custom implementation of the DIP-721 NFT standard and a Decentralized Autonomous Organization (DAO) on the ICP blockchain to achieve the following:
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
+- **Unitization of Real Estate**: Properties are divided into units represented as NFTs.
+- **Property Co-Ownership**: Users can buy and own units, collectively owning the entire property.
+- **Profit Sharing**: Co-owners receive profits based on property performance.
 
-If you want to start working on your project right away, you might want to try the following commands:
+## Features
+
+- Unitizing Properties as NFTs
+- Purchase and Ownership of Property Units
+- Profit Distribution among Co-owners
+- DAO Governance and Decision Making
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (version 20.0.0)
+- Rust (version 1.6)
+- Internet Computer SDK (Canister SDK, Replica)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/abundance-io/propspace.git
+   ```
+
+2. **Navigate to the project directory:**
+   ```bash
+   cd propspace
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+4. **Configure your Internet Computer environment:**
+   - Set up your Internet Computer environment as per the SDK documentation.
+
+5. **Build and deploy the canister:**
+   ```bash
+   dfx deploy
+   ```
+
+### Usage Examples
+
+
+## Searching for Housing Units
+
+To search for available housing units on Propspace, utilize the following methods with `dfx` queries:
+
+### Query: `search_units`
+
+- **Description**: This query enables users to search for housing units based on specific criteria, such as location, size, price range, and amenities.
+- **Parameters**: Accepts query arguments like `location`, `priceRange`, `size`, etc.
+- **Returns**: An array of housing units matching the specified criteria.
+
+#### Example:
 
 ```bash
-cd propspace/
-dfx help
-dfx canister --help
+# Sample dfx query for searching housing units
+dfx canister call propspace search_units '(record { location = "City A"; priceRange = "$100,000 - $200,000"; size = "2 bedrooms"; })'
 ```
 
-## Running the project locally
+## Purchasing Units
 
-If you want to test your project locally, you can use the following commands:
+Once you've found the desired housing unit(s) through searching, proceed to purchase units using the following query:
+
+### Command: `purchase_unit`
+
+- **Description**: Allows users to purchase specific housing units by providing the unit ID and necessary payment details.
+- **Parameters**: Requires `unitId` and `paymentDetails`.
+- **Returns**: Confirmation of the successful purchase or relevant error message.
+
+#### Example:
 
 ```bash
-# Starts the replica, running in the background
-dfx start --background
-
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
+# Sample dfx command for purchasing housing units
+dfx canister call propspace purchase_unit '(unit123, record { paymentMethod = "Credit Card"; amount = "$150,000"; })'
 ```
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
+### Using the Website
 
-If you have made changes to your backend canister, you can generate a new candid interface with
+The Propspace website provides a user-friendly interface for interacting with the application. To use the website:
 
-```bash
-npm run generate
-```
+- Access the Propspace website: ]
+- Login or Create an Account: log in using your icp identity or create an account.
+- Explore Available Units: Browse and search for available housing units .
+- Purchase Units: Once you find a unit of interest, proceed to purchase it.
+- Track Ownership and Profits: Monitor your owned units and track profits generated by the property.
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+### License
 
-If you are making frontend changes, you can start a development server with
-
-```bash
-npm start
-```
-
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
-
-### Note on frontend environment variables
-
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
-
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+This project is licensed under the [MIT License](LICENSE).
