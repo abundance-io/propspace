@@ -12,6 +12,21 @@ pub trait Environment {
 }
 
 pub struct CanisterEnvironment {}
+pub struct EmptyEnvironment {}
+
+impl Environment for EmptyEnvironment {
+    fn now(&self) -> u64 {
+        unimplemented!()
+    }
+
+    fn caller(&self) -> Principal {
+        unimplemented!()
+    }
+
+    fn canister_id(&self) -> Principal {
+        unimplemented!()
+    }
+}
 
 impl Environment for CanisterEnvironment {
     fn now(&self) -> u64 {

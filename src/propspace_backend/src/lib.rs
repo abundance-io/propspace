@@ -1,6 +1,9 @@
 use ic_cdk::export::candid::candid_method;
 use ic_cdk::export::candid::export_service;
+mod dip721;
 mod env;
+mod service;
+mod types;
 
 #[candid_method]
 #[ic_cdk::query]

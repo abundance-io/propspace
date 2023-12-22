@@ -436,6 +436,17 @@ fn trade_units(
     })
 }
 
+#[query(name = "isStakeholder")]
+fn is_stakeholder(token_id: TokenIdentifier, user: Principal) -> NftResult<bool> {
+    STATE.with(|state| {
+        if let Some(token) = state.borrow().tokens.get(&token_id) {
+            Ok(token.metadata.owners.contains_key(&user))
+        } else {
+            Err(NftError::TokenNotFound)
+        }
+    })
+}
+
 #[query(name = "getHouseData")]
 fn get_token_data(token_id: TokenIdentifier) -> NftResult<TokenData> {
     STATE.with(|state| {
