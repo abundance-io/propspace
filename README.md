@@ -23,7 +23,7 @@ Propspace leverages a custom implementation of the DIP-721 NFT standard and a De
 
 - Node.js (version 20.0.0)
 - Rust (version 1.6)
-- Internet Computer SDK (Canister SDK, Replica, etc.)
+- Internet Computer SDK (Canister SDK, Replica)
 
 ### Installation
 
@@ -52,22 +52,39 @@ Propspace leverages a custom implementation of the DIP-721 NFT standard and a De
 
 ### Usage Examples
 
-#### Searching for Housing Units
 
-```javascript
-// Sample code snippet for searching housing units
-// Use appropriate methods from the Propspace API
+## Searching for Housing Units
 
-// ...
+To search for available housing units on Propspace, utilize the following methods with `dfx` queries:
+
+### Query: `search_units`
+
+- **Description**: This query enables users to search for housing units based on specific criteria, such as location, size, price range, and amenities.
+- **Parameters**: Accepts query arguments like `location`, `priceRange`, `size`, etc.
+- **Returns**: An array of housing units matching the specified criteria.
+
+#### Example:
+
+```bash
+# Sample dfx query for searching housing units
+dfx canister call propspace search_units '(record { location = "City A"; priceRange = "$100,000 - $200,000"; size = "2 bedrooms"; })'
 ```
 
-#### Purchasing Units
+## Purchasing Units
 
-```javascript
-// Sample code snippet for purchasing housing units
-// Use appropriate methods from the Propspace API
+Once you've found the desired housing unit(s) through searching, proceed to purchase units using the following query:
 
-// ...
+### Command: `purchase_unit`
+
+- **Description**: Allows users to purchase specific housing units by providing the unit ID and necessary payment details.
+- **Parameters**: Requires `unitId` and `paymentDetails`.
+- **Returns**: Confirmation of the successful purchase or relevant error message.
+
+#### Example:
+
+```bash
+# Sample dfx command for purchasing housing units
+dfx canister call propspace purchase_unit '(unit123, record { paymentMethod = "Credit Card"; amount = "$150,000"; })'
 ```
 
 ### Contributing
