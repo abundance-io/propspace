@@ -15,7 +15,7 @@
       "package": "propspace_backend",
       "type": "rust"
     },
-    "propspace_frontend": {
+    "propspace_frontend_t": {
       "dependencies": [
         "propspace_backend"
       ],

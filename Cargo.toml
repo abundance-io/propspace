@@ -1,5 +1,4 @@
 [workspace]
-members = [
-    "src/propspace_backend",
-    "src/propspace_dip721",
-]
+members = ["src/propspace_backend", "src/propspace_dip721"]
+
+resolver = "2"
