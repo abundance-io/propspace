@@ -1,5 +1,11 @@
 {
   "canisters": {
+    
+    "propspace_dip721": {
+      "candid": "src/propspace_dip721/propspace_dip721.did",
+      "package": "propspace_backend",
+      "type": "rust"
+    },
     "propspace_backend": {
       "candid": "src/propspace_backend/propspace_backend.did",
       "package": "propspace_backend",

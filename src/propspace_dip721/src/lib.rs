@@ -1,3 +1,4 @@
+use core::num;
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
@@ -31,6 +32,9 @@ enum NftError {
     UnauthorizedOperator,
     ExistedNFT,
     OwnerNotFound,
+    UnitsNotAvailable,
+    InsufficientUnits,
+    SenderNotOwner,
     Other(String),
 }
 
@@ -96,26 +100,45 @@ pub enum GenericValue {
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone)]
+struct HousingUnit {
+    id: TokenIdentifier,
+    num_units: u64,
+}
+#[derive(CandidType, Serialize, Deserialize, Clone)]
 struct TokenMetaData {
-    owner: Principal,
+    owners: Owners,
     is_burned: bool,
     properties: Vec<(String, GenericValue)>,
     burned_at: Option<u64>,
     burned_by: Option<Principal>,
     minted_at: u64,
     minted_by: Principal,
+    //prospace specific additions
+    price_per_unit: u64,
+    total_num_units: u64,
+    num_units_taken: u64,
 }
 
 impl TokenMetaData {
-    fn new(owner: Principal, properties: Option<Vec<(String, GenericValue)>>) -> Self {
+    fn new(
+        owner: Principal,
+        owners: Owners,
+        properties: Option<Vec<(String, GenericValue)>>,
+        price_per_unit: u64,
+        total_num_units: u64,
+        num_units: u64,
+    ) -> Self {
         Self {
-            owner,
+            owners,
             is_burned: false,
             properties: properties.unwrap_or_default(),
             burned_at: None,
             burned_by: None,
             minted_at: api::time(),
+            num_units_taken: 0,
             minted_by: owner,
+            price_per_unit,
+            total_num_units,
         }
     }
 }
@@ -138,6 +161,7 @@ struct State {
 
 type CanisterResult<T = ()> = Result<T, String>;
 type NftResult<T = ()> = Result<T, NftError>;
+type Owners = HashMap<Principal, u64>;
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -265,10 +289,10 @@ fn get_user_token_count(user: Principal) -> NftResult<Nat> {
 }
 
 #[query(name = "ownerOf")]
-fn get_token_owner(token_id: u64) -> NftResult<Principal> {
+fn get_token_owners(token_id: u64) -> NftResult<Owners> {
     STATE.with(|state| {
         if let Some(nft) = state.borrow().tokens.get(&token_id) {
-            Ok(nft.metadata.owner)
+            Ok(nft.metadata.owners.clone())
         } else {
             Err(NftError::TokenNotFound)
         }
@@ -306,19 +330,30 @@ fn get_canister_supply() -> Nat {
     STATE.with_borrow(|state| Nat::from(state.stats.total_supply))
 }
 
-#[update(name = "mint", guard = "is_custodian")]
+#[update(name = "mintHouse", guard = "is_custodian")]
 fn mint_token(
     user: Principal,
     token_id: Option<TokenIdentifier>,
     token_data: TokenData,
     properties: Option<Vec<(String, GenericValue)>>,
+    price_per_unit: u64,
+    total_num_units: u64,
+    num_units: u64,
 ) -> NftResult<TokenIdentifier> {
     STATE.with_borrow_mut(|state| {
         let token_id = token_id.unwrap_or(state.stats.total_supply + 1);
         if state.tokens.contains_key(&token_id) {
             return Err(NftError::ExistedNFT);
         }
-        let token_metadata = TokenMetaData::new(user, properties);
+        let stakeholders = HashMap::default();
+        let token_metadata = TokenMetaData::new(
+            user,
+            stakeholders,
+            properties,
+            price_per_unit,
+            total_num_units,
+            num_units,
+        );
 
         let token = Token {
             metadata: token_metadata,
@@ -340,7 +375,68 @@ fn mint_token(
     })
 }
 
-#[query(name = "getTokenData")]
+#[update(name = "addStakeholder", guard = "is_custodian")]
+fn add_stakeholder(token_id: TokenIdentifier, stakeholder: Principal, num_units: u64) -> NftResult {
+    STATE.with_borrow_mut(|state| {
+        if let Some(token) = state.tokens.get_mut(&token_id) {
+            let num_units_available =
+                token.metadata.total_num_units - token.metadata.num_units_taken;
+            if (num_units < num_units_available) {
+                token
+                    .metadata
+                    .owners
+                    .entry(stakeholder)
+                    .and_modify(|e| *e += num_units)
+                    .or_insert(num_units);
+                token.metadata.num_units_taken += num_units;
+                Ok(())
+            } else {
+                Err(NftError::UnitsNotAvailable)
+            }
+        } else {
+            Err(NftError::TokenNotFound)
+        }
+    })
+}
+
+#[update(name = "tradeUnits", guard = "is_custodian")]
+fn trade_units(
+    token_id: TokenIdentifier,
+    sender: Principal,
+    receiever: Principal,
+    num_units: u64,
+) -> NftResult {
+    STATE.with_borrow_mut(|state| {
+        if let Some(token) = state.tokens.get_mut(&token_id) {
+            if let Some(sender_tokens) = token.metadata.owners.get_mut(&sender) {
+                if (*sender_tokens >= num_units) {
+                    token
+                        .metadata
+                        .owners
+                        .entry(receiever)
+                        .and_modify(|e| *e += num_units)
+                        .or_insert(num_units);
+
+                    token
+                        .metadata
+                        .owners
+                        .entry(sender)
+                        .and_modify(|e| *e -= num_units)
+                        .or_insert(num_units);
+                    Ok(())
+                } else {
+                    Err(NftError::InsufficientUnits)
+                }
+            } else {
+                Err(NftError::OperatorNotFound)
+            }
+        } else {
+            Err(NftError::TokenNotFound)
+        }
+    })
+}
+
+#[query(name = "getHouseData")]
 fn get_token_data(token_id: TokenIdentifier) -> NftResult<TokenData> {
     STATE.with(|state| {
         if let Some(token) = state.borrow().tokens.get(&token_id) {
@@ -351,14 +447,33 @@ fn get_token_data(token_id: TokenIdentifier) -> NftResult<TokenData> {
     })
 }
 
+#[query(name = "getUserHousingUnits")]
+fn get_housing_units(user: Principal) {
+    STATE.with(|state| {
+        let units: Vec<HousingUnit> = state
+            .borrow()
+            .tokens
+            .iter()
+            .filter_map(|(token_id, token)| match token.metadata.owners.get(&user) {
+                Some(num_units) => Some(HousingUnit {
+                    id: *token_id,
+                    num_units: *num_units,
+                }),
+                None => None,
+            })
+            .collect();
+    })
+}
+
 #[update(name = "burnToken", guard = "is_custodian")]
 fn burn_token(token_id: TokenIdentifier) -> NftResult {
     STATE.with_borrow_mut(|state| {
         if let Some(token) = state.tokens.get_mut(&token_id) {
+            token.metadata.owners = HashMap::default();
             token.metadata.is_burned = true;
             token.metadata.burned_at = Some(api::time());
             token.metadata.burned_by = Some(api::caller());
-            token.metadata.owner = Principal::anonymous();
+            token.metadata.minted_by = Principal::anonymous();
             state.stats.total_supply -= 1;
             Ok(())
         } else {
