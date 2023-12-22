@@ -7,14 +7,14 @@ mod types;
 
 #[candid_method]
 #[ic_cdk::query]
-fn greet(name: String) -> String {
-    format!("Hello, {}!", name)
+fn submit_proposal(proposal: String) -> String {
+    format!("{}!", proposal)
 }
 
 #[candid_method]
 #[ic_cdk::query]
-fn greet_2(name: String) -> String {
-    format!("Hello, {}!", name)
+fn execute_proposal(proposal: String) -> String {
+    format!("Hello, {}!", proposal)
 }
 
 #[ic_cdk::query(name = "__get_candid_interface_tmp_hack")]

@@ -7,6 +7,10 @@
       "type": "rust"
     },
     "propspace_backend": {
+
+      "dependencies": [
+        "propspace_dip721"
+      ],
       "candid": "src/propspace_backend/propspace_backend.did",
       "package": "propspace_backend",
       "type": "rust"

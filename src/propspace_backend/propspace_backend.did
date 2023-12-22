@@ -1,3 +1,4 @@
 service : {
-    "greet": (text) -> (text) query;
+  execute_proposal : (text) -> (text);
+  submit_proposal : (text) -> (text);
 }

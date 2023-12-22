@@ -32,9 +32,3 @@ impl From<HousingDaoStorage> for HousingDaoService {
         }
     }
 }
-
-impl HousingDaoService {
-    pub fn submit_proposal(&self, proposer: Principal, proposal: Proposal) {
-        let is_stakeholder = ic_cdk::call(self.dip_service.id, "isStakeholder", ());
-    }
-}
