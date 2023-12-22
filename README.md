@@ -21,15 +21,15 @@ Propspace leverages a custom implementation of the DIP-721 NFT standard and a De
 
 ### Prerequisites
 
-- Node.js (version X.X.X)
-- Rust (version X.X.X)
+- Node.js (version 20.0.0)
+- Rust (version 1.6)
 - Internet Computer SDK (Canister SDK, Replica, etc.)
 
 ### Installation
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/propspace.git
+   git clone https://github.com/abundance-io/propspace.git
    ```
 
 2. **Navigate to the project directory:**
