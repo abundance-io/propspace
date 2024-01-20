@@ -33,6 +33,6 @@ mod tests {
         use std::path::PathBuf;
         let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
         let dir = dir.parent().unwrap();
-        write(dir.join("propspace_backend.did"), export_candid()).expect("Write failed.");
+        write(dir.join("./propspace_backend/propspace_backend.did"), export_candid()).expect("Write failed.");
     }
 }

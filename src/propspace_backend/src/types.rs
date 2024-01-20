@@ -66,3 +66,6 @@ pub struct UnitSaleProposition {
 pub struct SetPriceProposition {
     new_price: u64,
 }
+
+
+
