@@ -39,18 +39,25 @@ type NftError = variant {
   TxNotFound;
   SelfApprove;
   OperatorNotFound;
+  InsufficientUnits;
   ExistedNFT;
+  SenderNotOwner;
   OwnerNotFound;
   Other : text;
+  UnitsNotAvailable;
 };
-type Result = variant { Ok : nat; Err : NftError };
-type Result_1 = variant { Ok; Err : NftError };
+type Result = variant { Ok; Err : NftError };
+type Result_1 = variant { Ok : nat; Err : NftError };
 type Result_2 = variant { Ok : TokenData; Err : NftError };
 type Result_3 = variant { Ok : TokenMetaData; Err : NftError };
-type Result_4 = variant { Ok : nat64; Err : NftError };
-type Result_5 = variant { Ok : principal; Err : NftError };
-type Result_6 = variant { Ok : vec nat64; Err : NftError };
-type Result_7 = variant { Ok : vec TokenMetaData; Err : NftError };
+type Result_4 = variant { Ok : bool; Err : NftError };
+type Result_5 = variant { Ok : nat64; Err : NftError };
+type Result_6 = variant {
+  Ok : vec record { principal; nat64 };
+  Err : NftError;
+};
+type Result_7 = variant { Ok : vec nat64; Err : NftError };
+type Result_8 = variant { Ok : vec TokenMetaData; Err : NftError };
 type Stats = record {
   cycles : nat64;
   total_transactions : nat64;
@@ -59,9 +66,12 @@ type Stats = record {
 };
 type TokenData = record { data_type : DataType; bytes : vec nat8 };
 type TokenMetaData = record {
-  owner : principal;
+  owners : vec record { principal; nat64 };
+  price_per_unit : nat64;
+  total_num_units : nat64;
   properties : vec record { text; GenericValue };
   is_burned : bool;
+  num_units_taken : nat64;
   burned_at : opt nat64;
   burned_by : opt principal;
   minted_at : nat64;
@@ -89,8 +99,9 @@ type Vec = vec record {
   };
 };
 service : (opt InitArguments) -> {
-  balanceOf : (principal) -> (Result) query;
-  burnToken : (nat64) -> (Result_1);
+  addStakeholder : (nat64, principal, nat64) -> (Result);
+  balanceOf : (principal) -> (Result_1) query;
+  burnToken : (nat64) -> (Result);
   getCanisterCustodians : () -> (vec principal) query;
   getCanisterCycles : () -> (nat) query;
   getCanisterLogo : () -> (opt text) query;
@@ -98,21 +109,27 @@ service : (opt InitArguments) -> {
   getCanisterName : () -> (opt text) query;
   getCanisterStats : () -> (Stats) query;
   getCanisterSymbol : () -> (opt text) query;
-  getTokenData : (nat64) -> (Result_2) query;
+  getHouseData : (nat64) -> (Result_2) query;
   getTokenMetadata : (nat64) -> (Result_3) query;
-  mint : (
+  getUserHousingUnits : (principal) -> () query;
+  isStakeholder : (nat64, principal) -> (Result_4) query;
+  mintHouse : (
       principal,
       opt nat64,
       TokenData,
       opt vec record { text; GenericValue },
-    ) -> (Result_4);
-  ownerOf : (nat64) -> (Result_5) query;
-  ownerTokenIdentifiers : (principal) -> (Result_6) query;
-  ownerTokenMetadata : (principal) -> (Result_7) query;
+      nat64,
+      nat64,
+      nat64,
+    ) -> (Result_5);
+  ownerOf : (nat64) -> (Result_6) query;
+  ownerTokenIdentifiers : (principal) -> (Result_7) query;
+  ownerTokenMetadata : (principal) -> (Result_8) query;
   setCanisterCustodians : (vec principal) -> ();
   setCanisterLogo : (opt text) -> ();
   setCanisterName : (opt text) -> ();
   setCanisterSymbol : (opt text) -> ();
   totalSupply : () -> (nat) query;
   totalUniqueHolders : () -> (nat) query;
+  tradeUnits : (nat64, principal, principal, nat64) -> (Result);
 }
