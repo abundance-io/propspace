@@ -7,7 +7,7 @@ use std::collections::HashMap;
 pub struct HousingDaoService {
     pub env: Box<dyn Environment>,
     pub dip_service: DIPService,
-    pub accounts: HashMap<Principal, AccountData>,
+    pub accounts: HashMap<Principal, Account>,
     pub proposals: HashMap<u64, Proposal>,
 }
 
