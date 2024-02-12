@@ -6,23 +6,21 @@ use ic_cdk::export::{
     Principal,
 };
 
-type HouseTokenIdentifier = u64;
-
 #[derive(Clone, Copy, Debug, Default, CandidType, Deserialize)]
 pub struct Tokens {
     pub amount_e8s: u64,
 }
-#[derive(Clone, Copy, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Account {
     pub principal: Principal,
     pub tokens: Tokens,
-    pub housing_units: HousingUnit,
+    pub housing_units: Vec<HousingUnit>,
 }
 
 #[derive(Clone, Copy, Debug, Default, CandidType, Deserialize)]
 pub struct HousingUnit {
     // house_identifier
-    pub id: HouseTokenIdentifier,
+    pub id: u64,
     pub num_units: u64,
 }
 
@@ -30,7 +28,7 @@ pub struct HousingUnit {
 pub struct Proposal {
     pub id: u64,
     pub timestamp: u64,
-    pub housing_unit: HouseTokenIdentifier,
+    pub housing_unit: u64,
     pub proposer: Principal,
     pub proposition: String,
     pub state: ProposalState,
@@ -43,10 +41,16 @@ pub struct Proposal {
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
 pub struct Space {
     pub id: u64,
-    location: String,
-    description: String,
-    price_per_unit: u64,
-    units_available: u64,
+    pub details: SpaceDetails,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+pub struct SpaceDetails {
+    pub owner: Principal,
+    pub location: String,
+    pub description: String,
+    pub price_per_unit: u64,
+    pub units_available: u64,
 }
 
 //struct to preserve and export dao data - to allow easy reuse
@@ -55,6 +59,7 @@ pub struct HousingDaoStorage {
     pub accounts: Vec<Account>,
     pub proposals: Vec<Proposal>,
     pub spaces: Vec<Space>,
+    pub secret_key: String,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
@@ -83,4 +88,16 @@ pub struct UnitSaleProposition {
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
 pub struct SetPriceProposition {
     new_price: u64,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+pub struct DaoServiceError {
+    pub error_type: ErrorType,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+pub enum ErrorType {
+    Unauthorized(String),
+    NotFound(String),
+    Failure(String),
 }
