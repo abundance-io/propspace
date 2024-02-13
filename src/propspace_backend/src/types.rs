@@ -1,3 +1,4 @@
+use crate::dip721::NftError;
 use crate::env::{EmptyEnvironment, Environment};
 use std::collections::HashMap;
 
@@ -5,6 +6,7 @@ use ic_cdk::export::{
     candid::{CandidType, Deserialize},
     Principal,
 };
+use serde_derive::Serialize;
 
 #[derive(Clone, Copy, Debug, Default, CandidType, Deserialize)]
 pub struct Tokens {
@@ -38,13 +40,13 @@ pub struct Proposal {
     pub voters: Vec<Principal>,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, PartialOrd)]
 pub struct Space {
     pub id: u64,
     pub details: SpaceDetails,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, PartialOrd)]
 pub struct SpaceDetails {
     pub owner: Principal,
     pub location: String,
@@ -56,6 +58,7 @@ pub struct SpaceDetails {
 //struct to preserve and export dao data - to allow easy reuse
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct HousingDaoStorage {
+    pub dip_service_principal: Principal,
     pub accounts: Vec<Account>,
     pub proposals: Vec<Proposal>,
     pub spaces: Vec<Space>,
@@ -90,14 +93,16 @@ pub struct SetPriceProposition {
     new_price: u64,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, CandidType, Deserialize)]
 pub struct DaoServiceError {
     pub error_type: ErrorType,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, CandidType, Deserialize)]
 pub enum ErrorType {
     Unauthorized(String),
     NotFound(String),
     Failure(String),
+    NftError(NftError),
+    CanisterError(String),
 }

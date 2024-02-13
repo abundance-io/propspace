@@ -1,4 +1,4 @@
 [workspace]
-members = ["src/propspace_backend", "src/propspace_dip721"]
+members = ["src/propspace_backend", "src/propspace_dip721","src/propspace_payments"]
 
 resolver = "2"

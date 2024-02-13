@@ -1,12 +1,14 @@
-use crate::dip721::DIPService;
+use crate::dip721::NftResult;
+// use crate::dip721::DIPService;
 use crate::env::{EmptyEnvironment, Environment};
 use crate::types::*;
 use ic_cdk::export::Principal;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 pub struct HousingDaoService {
     pub env: Box<dyn Environment>,
-    pub dip_service: DIPService,
+    pub dip_service_principal: Principal,
     pub accounts: HashMap<Principal, Account>,
     pub proposals: HashMap<u64, Proposal>,
     pub spaces: HashMap<u64, Space>,
@@ -18,7 +20,7 @@ impl Default for HousingDaoService {
     fn default() -> Self {
         HousingDaoService {
             env: Box::new(EmptyEnvironment {}),
-            dip_service: DIPService::default(),
+            dip_service_principal: Principal::from_str("aaaaa").unwrap(),
             accounts: HashMap::new(),
             proposals: HashMap::new(),
             spaces: HashMap::new(),
@@ -53,7 +55,7 @@ impl From<HousingDaoStorage> for HousingDaoService {
 
         HousingDaoService {
             env: Box::new(EmptyEnvironment {}),
-            dip_service: DIPService::default(),
+            dip_service_principal: storage.dip_service_principal,
             accounts: accounts,
             proposals: proposals,
             spaces: spaces,
@@ -64,6 +66,11 @@ impl From<HousingDaoStorage> for HousingDaoService {
 }
 
 impl HousingDaoService {
+    pub async fn random_call(&self, token_id: u64) {
+        let tokenRes: Result<(NftResult,), _> =
+            ic_cdk::call(self.dip_service_principal, "burnToken", (token_id,)).await;
+    }
+
     pub fn create_account(
         &mut self,
         secret_key: String,
@@ -105,8 +112,8 @@ impl HousingDaoService {
             id: self.next_space_id,
             details: space_details,
         };
-
         self.next_space_id += 1;
+
         match self.spaces.insert(space.id, space) {
             Some(space) => return Ok(space.id),
             None => {

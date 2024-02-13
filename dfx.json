@@ -1,5 +1,10 @@
 {
   "canisters": {
+    "propspace_payments": {
+      "candid": "src/propspace_payments/propspace_payments.did",
+      "package": "propspace_payments",
+      "type": "rust"
+    },
     "propspace_dip721": {
       "candid": "src/propspace_dip721/propspace_dip721.did",
       "package": "propspace_dip721",
@@ -11,7 +16,7 @@
       "package": "propspace_backend",
       "type": "rust"
     },
-    "propspace_frontend_t": {
+    "propspace_frontend": {
       "dependencies": ["propspace_backend"],
       "frontend": {
         "entrypoint": "src/propspace_frontend/src/index.html"
