@@ -19,7 +19,7 @@
     "propspace_frontend": {
       "dependencies": ["propspace_backend"],
       "frontend": {
-        "entrypoint": "src/propspace_frontend/src/index.html"
+        "entrypoint": "src/propspace_frontend/dist/index.html"
       },
       "source": ["src/propspace_frontend/assets", "dist/propspace_frontend/"],
       "type": "assets"

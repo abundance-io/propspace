@@ -1,5 +1,6 @@
 use core::num;
 use std::{
+    borrow::BorrowMut,
     cell::RefCell,
     collections::{HashMap, HashSet},
 };
@@ -59,10 +60,11 @@ struct Stats {
     total_supply: u64,
     total_transactions: u64,
     total_unique_holders: u64,
+    total_spaces: u64,
     cycles: u64,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 struct Token {
     metadata: TokenMetaData,
     data: TokenData,
@@ -108,7 +110,7 @@ struct TokenMetaData {
     burned_by: Option<Principal>,
     minted_at: u64,
     minted_by: Principal,
-    house_id: u64,
+    space_id: u64,
     num_units: u64,
 }
 
@@ -117,7 +119,7 @@ impl TokenMetaData {
         owner: Principal,
         properties: Option<Vec<(String, GenericValue)>>,
         num_units: u64,
-        house_id: u64,
+        space_id: u64,
     ) -> Self {
         Self {
             owner,
@@ -128,7 +130,7 @@ impl TokenMetaData {
             burned_by: None,
             minted_at: api::time(),
             minted_by: owner,
-            house_id,
+            space_id,
         }
     }
 }
@@ -141,11 +143,19 @@ struct InitArguments {
     custoidians: Option<HashSet<Principal>>,
 }
 
+#[derive(CandidType, Deserialize, Default, Copy, Clone)]
+struct Space {
+    id: u64,
+    price_per_unit: u64,
+    num_units_available: u64,
+}
+
 #[derive(CandidType, Deserialize, Default)]
 struct State {
     canister_metadata: CanisterMetaData,
     tokens: HashMap<TokenIdentifier, Token>,
     owners: HashMap<Principal, HashSet<TokenIdentifier>>,
+    spaces: HashMap<u64, Space>,
     stats: Stats,
 }
 
@@ -286,69 +296,51 @@ fn get_canister_supply() -> Nat {
 fn mint_token(
     owner: Principal,
     properties: Option<Vec<(String, GenericValue)>>,
-    house_id: u64,
+    space_id: u64,
+    token_data: TokenData,
+    num_units: u64,
 ) -> NftResult<TokenIdentifier> {
     STATE.with_borrow_mut(|state| {
-        let token_id = token_id.unwrap_or(state.stats.total_supply + 1);
+        let token_id = state.stats.total_supply + 1;
         if state.tokens.contains_key(&token_id) {
             return Err(NftError::ExistedNFT);
         }
-        let token_metadata = TokenMetaData::new(
-            owner, properties,
-            house_id, // owner,
-                     // properties,
-                     // is_burned:false,
-                     // price_per_unit,
-                     // total_num_units,
-                     // num_units,
-        );
+        let token_metadata = TokenMetaData::new(owner, properties, num_units, space_id);
 
         let token = Token {
             metadata: token_metadata,
             data: token_data,
         };
 
-        state.tokens.insert(token_id, token);
-
-        if let Some(tokens) = state.owners.get_mut(&user) {
-            tokens.insert(token_id);
-        } else {
-            state.owners.insert(user, HashSet::from([token_id]));
-            state.stats.total_unique_holders += 1;
-        }
-
-        state.stats.total_supply += 1;
-
-        Ok(token_id)
-    })
-}
-
-#[update(name = "addStakeholder", guard = "is_custodian")]
-fn add_stakeholder(token_id: TokenIdentifier, stakeholder: Principal, num_units: u64) -> NftResult {
-    STATE.with_borrow_mut(|state| {
-        if let Some(token) = state.tokens.get_mut(&token_id) {
-            let num_units_available =
-                token.metadata.total_num_units - token.metadata.num_units_taken;
-            if (num_units < num_units_available) {
-                token
-                    .metadata
-                    .owners
-                    .entry(stakeholder)
-                    .and_modify(|e| *e += num_units)
-                    .or_insert(num_units);
-                token.metadata.num_units_taken += num_units;
-                Ok(())
-            } else {
-                Err(NftError::UnitsNotAvailable)
+        let space = state.spaces.get(&space_id);
+        match (space) {
+            Some(space) => {
+                if (space.num_units_available > 0) {
+                    state.tokens.insert(token_id, token);
+                    state.stats.total_supply += 1;
+                    let saved_owner = state.owners.get(&owner);
+                    match (saved_owner) {
+                        Some(_) => {}
+                        None => {
+                            //random state for owner bound to first ever token?
+                            state.owners.insert(owner, HashSet::from([token_id]));
+                        }
+                    }
+                } else {
+                    return Err(NftError::UnitsNotAvailable);
+                }
             }
-        } else {
-            Err(NftError::TokenNotFound)
+            None => {
+                return Err(NftError::Other(String::from("house does not exist")));
+            }
         }
+        Ok(token_id)
     })
 }
 
 #[update(name = "tradeUnits", guard = "is_custodian")]
 fn trade_units(
+    //empty string if optional "" add struct later
     token_id: TokenIdentifier,
     sender: Principal,
     receiever: Principal,
@@ -356,27 +348,21 @@ fn trade_units(
 ) -> NftResult {
     STATE.with_borrow_mut(|state| {
         if let Some(token) = state.tokens.get_mut(&token_id) {
-            if let Some(sender_tokens) = token.metadata.owners.get_mut(&sender) {
-                if (*sender_tokens >= num_units) {
-                    token
-                        .metadata
-                        .owners
-                        .entry(receiever)
-                        .and_modify(|e| *e += num_units)
-                        .or_insert(num_units);
+            if sender == token.metadata.owner {
+                if (token.metadata.num_units >= num_units) {
+                    //debit sender
+                    state
+                        .tokens
+                        .entry(token_id)
+                        .and_modify(|e| e.metadata.num_units -= num_units);
 
-                    token
-                        .metadata
-                        .owners
-                        .entry(sender)
-                        .and_modify(|e| *e -= num_units)
-                        .or_insert(num_units);
+                    //fix transfer to reciever later
                     Ok(())
                 } else {
                     Err(NftError::InsufficientUnits)
                 }
             } else {
-                Err(NftError::OperatorNotFound)
+                Err(NftError::UnauthorizedOwner)
             }
         } else {
             Err(NftError::TokenNotFound)
@@ -384,51 +370,58 @@ fn trade_units(
     })
 }
 
-#[query(name = "isStakeholder")]
-pub fn is_stakeholder(token_id: TokenIdentifier, user: Principal) -> NftResult<bool> {
+#[query(name = "isOwner")]
+pub fn is_owner(token_id: TokenIdentifier, user: Principal) -> NftResult<bool> {
     STATE.with(|state| {
         if let Some(token) = state.borrow().tokens.get(&token_id) {
-            Ok(token.metadata.owners.contains_key(&user))
+            if (token.metadata.owner == user) {
+                Ok(true)
+            } else {
+                Ok(false)
+            }
         } else {
             Err(NftError::TokenNotFound)
         }
     })
 }
 
-#[query(name = "getHouseData")]
-fn get_token_data(token_id: TokenIdentifier) -> NftResult<TokenData> {
+#[query(name = "getSpaceData")]
+fn get_space_data(space_id: u64) -> NftResult<Space> {
     STATE.with(|state| {
-        if let Some(token) = state.borrow().tokens.get(&token_id) {
-            Ok(token.data.clone())
+        if let Some(space) = state.borrow().spaces.get(&space_id) {
+            Ok(space.clone())
         } else {
-            Err(NftError::TokenNotFound)
+            Err(NftError::Other(String::from("space not found")))
         }
     })
 }
 
-// #[query(name = "getUserHousingUnits")]
-// fn get_housing_units(user: Principal) {
-//     STATE.with(|state| {
-//         let units: Vec<HousingUnit> = state
-//             .borrow()
-//             .tokens
-//             .iter()
-//             .filter_map(|(token_id, token)| match token.metadata.owners.get(&user) {
-//                 Some(num_units) => Some(HousingUnit {
-//                     id: *token_id,
-//                     num_units: *num_units,
-//                 }),
-//                 None => None,
-//             })
-//             .collect();
-//     })
-// }
+#[update(name = "createSpace", guard = "is_custodian")]
+fn create_space(space: Space) -> NftResult<Space> {
+    STATE.with_borrow_mut(|state| {
+        state.spaces.insert(state.stats.total_spaces + 1, space);
+        state.stats.total_spaces += 1;
+        Ok(space)
+    })
+}
 
+#[query(name = "getAllUserTokens")]
+fn get_all_user_tokens(user: Principal) -> Vec<Token> {
+    STATE.with(|state| {
+        state
+            .borrow()
+            .tokens
+            .values()
+            .filter(|x| x.metadata.owner == user)
+            .cloned()
+            .collect()
+    })
+}
 #[update(name = "burnToken", guard = "is_custodian")]
 fn burn_token(token_id: TokenIdentifier) -> NftResult {
     STATE.with_borrow_mut(|state| {
         if let Some(token) = state.tokens.get_mut(&token_id) {
-            token.metadata.owners = HashMap::default();
+            token.metadata.owner = Principal::anonymous();
             token.metadata.is_burned = true;
             token.metadata.burned_at = Some(api::time());
             token.metadata.burned_by = Some(api::caller());
