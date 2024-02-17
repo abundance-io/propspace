@@ -1,14 +1,14 @@
 use crate::types::*;
 use bincode::serialize;
+use candid::{CandidType, Int, Nat, Principal};
 use core::num;
+use ic_cdk::{api, query, update};
+use serde::{Deserialize, Serialize};
 use std::{
+    borrow::BorrowMut,
     cell::RefCell,
     collections::{HashMap, HashSet},
 };
-
-use candid::{CandidType, Int, Nat, Principal};
-use ic_cdk::{api, query, update};
-use serde::{Deserialize, Serialize};
 
 #[derive(CandidType, Serialize)]
 enum CanisterError {
@@ -61,10 +61,11 @@ struct Stats {
     total_supply: u64,
     total_transactions: u64,
     total_unique_holders: u64,
+    total_spaces: u64,
     cycles: u64,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 struct Token {
     metadata: TokenMetaData,
     data: TokenData,
@@ -102,45 +103,35 @@ pub enum GenericValue {
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone)]
-struct HousingUnit {
-    id: TokenIdentifier,
-    num_units: u64,
-}
-#[derive(CandidType, Serialize, Deserialize, Clone)]
 struct TokenMetaData {
-    owners: Owners,
+    owner: Principal,
     is_burned: bool,
     properties: Vec<(String, GenericValue)>,
     burned_at: Option<u64>,
     burned_by: Option<Principal>,
     minted_at: u64,
     minted_by: Principal,
-    //prospace specific additions
-    price_per_unit: u64,
-    total_num_units: u64,
-    num_units_taken: u64,
+    space_id: u64,
+    num_units: u64,
 }
 
 impl TokenMetaData {
     fn new(
         owner: Principal,
-        owners: Owners,
         properties: Option<Vec<(String, GenericValue)>>,
-        price_per_unit: u64,
-        total_num_units: u64,
         num_units: u64,
+        space_id: u64,
     ) -> Self {
         Self {
-            owners,
+            owner,
+            num_units,
             is_burned: false,
             properties: properties.unwrap_or_default(),
             burned_at: None,
             burned_by: None,
             minted_at: api::time(),
-            num_units_taken: 0,
             minted_by: owner,
-            price_per_unit,
-            total_num_units,
+            space_id,
         }
     }
 }
@@ -153,18 +144,15 @@ struct InitArguments {
     custoidians: Option<HashSet<Principal>>,
 }
 
-#[derive(CandidType, Deserialize, Default)]
-struct State {
-    canister_metadata: CanisterMetaData,
-    tokens: HashMap<TokenIdentifier, Token>,
-    owners: HashMap<Principal, HashSet<TokenIdentifier>>,
-    stats: Stats,
+#[derive(CandidType, Deserialize, Default, Copy, Clone)]
+struct Space {
+    id: u64,
+    price_per_unit: u64,
+    num_units_available: u64,
 }
 
 type CanisterResult<T = ()> = Result<T, String>;
-
 pub type NftResult<T = ()> = Result<T, NftError>;
-type Owners = HashMap<Principal, u64>;
 
 pub struct DIP721Service {
     principal: Principal,
@@ -179,12 +167,11 @@ impl From<Principal> for DIP721Service {
 impl DIP721Service {
     pub async fn mint_token(
         &self,
-        user: Principal,
-        token_id: Option<TokenIdentifier>,
+        owner: Principal,
+        space_id: u64,
         space_details: SpaceDetails,
         properties: Option<Vec<(String, GenericValue)>>,
-        price_per_unit: u64,
-        total_num_units: u64,
+        token_data: u64,
         num_units: u64,
     ) -> Result<(), DaoServiceError> {
         let token_data = TokenData {
@@ -192,18 +179,39 @@ impl DIP721Service {
             data_type: DataType::Raw,
         };
 
-        let minted_token_result: Result<(NftResult<TokenIdentifier>,), _> = ic_cdk::call(
+        let minted_token_result: Result<(NftResult,), _> = ic_cdk::call(
             self.principal,
             "mintHouse",
-            (
-                user,
-                token_id,
-                token_data,
-                properties,
-                space_details.price_per_unit,
-                space_details.total_num_units,
-                num_units,
-            ),
+            (owner, properties, space_id, token_data, num_units),
+        )
+        .await;
+
+        match (minted_token_result) {
+            Ok(res) => match res.0 {
+                Ok(id) => return Ok(()),
+
+                Err(err) => Err(DaoServiceError {
+                    error_type: ErrorType::NftError(err),
+                }),
+            },
+
+            Err(err) => Err(DaoServiceError {
+                error_type: ErrorType::CanisterError(err.1),
+            }),
+        }
+    }
+
+    pub async fn trade_units(
+        &self,
+        token_id: u64,
+        sender: Principal,
+        receiver: Principal,
+        num_units: u64,
+    ) -> Result<(), DaoServiceError> {
+        let minted_token_result: Result<(NftResult<TokenIdentifier>,), _> = ic_cdk::call(
+            self.principal,
+            "tradeUnits",
+            (token_id, sender, receiver, num_units),
         )
         .await;
 
