@@ -1,0 +1,115 @@
+type DataType = variant { Raw; Link };
+type GenericValue = variant {
+  Nat64Content : nat64;
+  Nat32Content : nat32;
+  BoolContent : bool;
+  Nat8Content : nat8;
+  Int64Content : int64;
+  IntContent : int;
+  NatContent : nat;
+  Nat16Content : nat16;
+  Int32Content : int32;
+  Int8Content : int8;
+  FloatContent : float64;
+  Int16Content : int16;
+  BlobContent : vec nat8;
+  NestedContent : Vec;
+  Principal : principal;
+  TextContent : text;
+};
+type InitArguments = record {
+  custoidians : opt vec principal;
+  logo : opt text;
+  name : opt text;
+  symbol : opt text;
+};
+type NftError = variant {
+  UnauthorizedOperator;
+  SelfTransfer;
+  TokenNotFound;
+  UnauthorizedOwner;
+  TxNotFound;
+  SelfApprove;
+  OperatorNotFound;
+  InsufficientUnits;
+  ExistedNFT;
+  SenderNotOwner;
+  OwnerNotFound;
+  Other : text;
+  UnitsNotAvailable;
+};
+type Result = variant { Ok : nat; Err : NftError };
+type Result_1 = variant { Ok; Err : NftError };
+type Result_2 = variant { Ok : Space; Err : NftError };
+type Result_3 = variant { Ok : TokenMetaData; Err : NftError };
+type Result_4 = variant { Ok : bool; Err : NftError };
+type Result_5 = variant { Ok : nat64; Err : NftError };
+type Result_6 = variant { Ok : principal; Err : NftError };
+type Result_7 = variant { Ok : vec nat64; Err : NftError };
+type Result_8 = variant { Ok : vec TokenMetaData; Err : NftError };
+type Space = record {
+  id : nat64;
+  num_units_available : nat64;
+  price_per_unit : nat64;
+};
+type Token = record { metadata : TokenMetaData; data : TokenData };
+type TokenData = record { data_type : DataType; bytes : vec nat8 };
+type TokenMetaData = record {
+  num_units : nat64;
+  owner : principal;
+  properties : vec record { text; GenericValue };
+  is_burned : bool;
+  burned_at : opt nat64;
+  burned_by : opt principal;
+  space_id : nat64;
+  minted_at : nat64;
+  minted_by : principal;
+};
+type Vec = vec record {
+  text;
+  variant {
+    Nat64Content : nat64;
+    Nat32Content : nat32;
+    BoolContent : bool;
+    Nat8Content : nat8;
+    Int64Content : int64;
+    IntContent : int;
+    NatContent : nat;
+    Nat16Content : nat16;
+    Int32Content : int32;
+    Int8Content : int8;
+    FloatContent : float64;
+    Int16Content : int16;
+    BlobContent : vec nat8;
+    NestedContent : Vec;
+    Principal : principal;
+    TextContent : text;
+  };
+};
+service : (opt InitArguments) -> {
+  balanceOf : (principal) -> (Result) query;
+  burnToken : (nat64) -> (Result_1);
+  createSpace : (Space) -> (Result_2);
+  getAllUserTokens : (principal) -> (vec Token) query;
+  getCanisterCustodians : () -> (vec principal) query;
+  getCanisterCycles : () -> (nat) query;
+  getCanisterName : () -> (opt text) query;
+  getSpaceData : (nat64) -> (Result_2) query;
+  getTokenMetadata : (nat64) -> (Result_3) query;
+  isOwner : (nat64, principal) -> (Result_4) query;
+  mintHouse : (
+      principal,
+      opt vec record { text; GenericValue },
+      nat64,
+      TokenData,
+      nat64,
+    ) -> (Result_5);
+  ownerOf : (nat64) -> (Result_6) query;
+  ownerTokenIdentifiers : (principal) -> (Result_7) query;
+  ownerTokenMetadata : (principal) -> (Result_8) query;
+  setCanisterCustodians : (vec principal) -> ();
+  setCanisterName : (opt text) -> ();
+  totalSupply : () -> (nat) query;
+  totalUniqueHolders : () -> (nat) query;
+  tradeUnits : (nat64, principal, principal, nat64) -> (Result_1);
+}

@@ -1,0 +1,80 @@
+type Account = record {
+  "principal" : principal;
+  tokens : Tokens;
+  housing_units : vec HousingUnit;
+};
+type DaoServiceError = record { error_type : ErrorType };
+type ErrorType = variant {
+  CanisterError : text;
+  NftError : NftError;
+  NotFound : text;
+  Unauthorized : text;
+  Failure : text;
+};
+type HousingDaoStorage = record {
+  dip_service_principal : principal;
+  accounts : vec Account;
+  secret_key : text;
+  spaces : vec Space;
+  proposals : vec Proposal;
+};
+type HousingUnit = record { id : nat64; num_units : nat64 };
+type NftError = variant {
+  UnauthorizedOperator;
+  SelfTransfer;
+  TokenNotFound;
+  UnauthorizedOwner;
+  TxNotFound;
+  SelfApprove;
+  OperatorNotFound;
+  InsufficientUnits;
+  ExistedNFT;
+  SenderNotOwner;
+  OwnerNotFound;
+  Other : text;
+  UnitsNotAvailable;
+};
+type Proposal = record {
+  id : nat64;
+  proposition : text;
+  percentage_against : float64;
+  voters : vec principal;
+  state : ProposalState;
+  percentage_for : float64;
+  timestamp : nat64;
+  percentage_abstain : float64;
+  proposer : principal;
+  housing_unit : nat64;
+};
+type ProposalState = variant {
+  Failed : text;
+  Open;
+  Executing;
+  Rejected;
+  Succeeded;
+  Accepted;
+};
+type Result = variant { Ok : principal; Err : DaoServiceError };
+type Result_1 = variant { Ok : nat64; Err : DaoServiceError };
+type Result_2 = variant { Ok : Account; Err : DaoServiceError };
+type Result_3 = variant { Ok : Tokens; Err : DaoServiceError };
+type Result_4 = variant { Ok : vec HousingUnit; Err : DaoServiceError };
+type Space = record { id : nat64; details : SpaceDetails };
+type SpaceDetails = record {
+  price_per_unit : nat64;
+  owner : principal;
+  description : text;
+  units_available : nat64;
+  location : text;
+};
+type Tokens = record { amount_e8s : nat64 };
+service : (HousingDaoStorage) -> {
+  create_account : (Account, text) -> (Result);
+  create_space : (SpaceDetails) -> (Result_1);
+  get_account_details : () -> (Result_2) query;
+  get_balance : () -> (Result_3) query;
+  get_housing_units : () -> (Result_4);
+  get_housing_units_from_space : (nat64) -> (Result_4);
+  list_accounts : () -> (vec Account) query;
+  list_spaces : () -> (vec Space);
+}

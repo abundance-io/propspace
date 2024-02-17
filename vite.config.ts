@@ -7,11 +7,9 @@ let localCanisters, prodCanisters, canisters;
 
 function initCanisterIds() {
   try {
-    localCanisters = require(path.resolve(
-      ".dfx",
-      "local",
-      "canister_ids.json"
-    ));
+    localCanisters = require(
+      path.resolve(".dfx", "local", "canister_ids.json"),
+    );
   } catch (error) {
     console.log("No local canister_ids.json found. Continuing production");
   }
@@ -42,7 +40,7 @@ const aliases = Object.entries(dfxJson.canisters).reduce(
       ".dfx",
       networkName,
       "canisters",
-      name
+      name,
     );
 
     return {
@@ -50,7 +48,7 @@ const aliases = Object.entries(dfxJson.canisters).reduce(
       ["dfx-generated/" + name]: path.join(outputRoot, name + ".did.js"),
     };
   },
-  {}
+  {},
 );
 
 //https://vitejs.dev/config/
@@ -59,6 +57,7 @@ export default defineConfig({
   resolve: {
     alias: {
       ...aliases,
+      "@": path.resolve(__dirname, "./"),
     },
   },
   define: {
