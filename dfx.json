@@ -1,36 +1,32 @@
 {
   "canisters": {
     "propspace_payments": {
-      "candid": "src/propspace_payments/propspace_payments.did",
+      "candid": "backend/propspace_payments/propspace_payments.did",
       "package": "propspace_payments",
       "type": "rust"
     },
     "propspace_dip721": {
-      "candid": "src/propspace_dip721/propspace_dip721.did",
+      "candid": "backend/propspace_dip721/propspace_dip721.did",
       "package": "propspace_dip721",
       "type": "rust"
     },
     "propspace_backend": {
       "dependencies": ["propspace_dip721"],
-      "candid": "src/propspace_backend/propspace_backend.did",
+      "candid": "backend/propspace_backend/propspace_backend.did",
       "package": "propspace_backend",
       "type": "rust"
     },
-    "propspace_frontend": {
-      "dependencies": ["propspace_backend"],
+    "frontend": {
+      "dependencies": [
+        "propspace_backend",
+        "propspace_dip721",
+        "propspace_payments"
+      ],
       "frontend": {
-        "entrypoint": "src/propspace_frontend/dist/index.html"
+        "entrypoint": "dist/index.html"
       },
-      "source": ["src/propspace_frontend/assets", "dist/propspace_frontend/"],
+      "source": ["dist"],
       "type": "assets"
     }
-  },
-  "defaults": {
-    "build": {
-      "args": "",
-      "packtool": ""
-    }
-  },
-  "output_env_file": ".env",
-  "version": 1
+  }
 }
