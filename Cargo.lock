@@ -880,6 +880,15 @@ dependencies = [
 [[package]]
 name = "propspace_payments"
 version = "0.1.0"
+dependencies = [
+ "bincode",
+ "candid 0.8.4",
+ "ic-cdk 0.7.4",
+ "ic-cdk-macros 0.8.4",
+ "ic-cdk-timers",
+ "serde",
+ "serde_derive",
+]
 
 [[package]]
 name = "psm"
