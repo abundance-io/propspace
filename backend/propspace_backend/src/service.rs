@@ -20,7 +20,7 @@ impl Default for HousingDaoService {
     fn default() -> Self {
         HousingDaoService {
             env: Box::new(EmptyEnvironment {}),
-            dip_service_principal: Principal::from_str("aaaaa").unwrap(),
+            dip_service_principal: Principal::anonymous(),
             accounts: HashMap::new(),
             proposals: HashMap::new(),
             spaces: HashMap::new(),

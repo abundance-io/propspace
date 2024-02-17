@@ -68,7 +68,7 @@ type SpaceDetails = record {
   location : text;
 };
 type Tokens = record { amount_e8s : nat64 };
-service : (HousingDaoStorage) -> {
+service : (opt HousingDaoStorage) -> {
   create_account : (Account, text) -> (Result);
   create_space : (SpaceDetails) -> (Result_1);
   get_account_details : () -> (Result_2) query;

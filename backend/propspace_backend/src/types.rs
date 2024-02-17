@@ -65,6 +65,18 @@ pub struct HousingDaoStorage {
     pub secret_key: String,
 }
 
+impl Default for HousingDaoStorage {
+    fn default() -> Self {
+        Self {
+            dip_service_principal: Principal::anonymous(),
+            accounts: vec![],
+            proposals: vec![],
+            spaces: vec![],
+            secret_key: String::from("default_secret"),
+        }
+    }
+}
+
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, PartialOrd)]
 pub enum ProposalState {
     Open,
