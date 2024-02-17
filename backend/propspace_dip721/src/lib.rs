@@ -135,7 +135,7 @@ impl TokenMetaData {
     }
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Serialize)]
 struct InitArguments {
     name: Option<String>,
     symbol: Option<String>,
